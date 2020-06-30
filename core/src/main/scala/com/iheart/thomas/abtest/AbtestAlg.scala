@@ -206,16 +206,15 @@ final class DefaultAbtestAlg[F[_]](
   def tempTask: F[String] = {
     for {
       features <- getAllFeatures
-      featureLines <- features.traverseFilter { f =>
+      featureLines <- features.traverse { f =>
         getTestsByFeature(f).map { tests =>
-          val sorted = tests.sortBy(_.data.start)
-          for {
-            start <- sorted.headOption
-            end <- sorted.lastOption
-          } yield s"$f, ${start.data.start}, ${end.data.end.map(_.toString).getOrElse("")}"
+          tests.toList.sortBy(_.data.start).map { t =>
+            s"$f\t${t.data.name}\t${t.data.start}\t${t.data.end.map(_.toString).getOrElse("")}"
+          }
         }
       }
-    } yield featureLines.mkString("\n")
+    } yield "feature\ttest name\tstart\tend\n" +
+      featureLines.flatten.mkString("\n")
   }
 
   def create(
