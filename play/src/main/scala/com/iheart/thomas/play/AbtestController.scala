@@ -61,6 +61,10 @@ class AbtestController[F[_]](
 
   }
 
+  def tempTask = action {
+    api.tempTask
+  }
+
   def getAllTestsCached(at: Option[Long]) = action {
     api.getAllTestsCachedEpoch(at)
   }

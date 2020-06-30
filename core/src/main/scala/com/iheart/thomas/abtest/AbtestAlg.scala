@@ -95,6 +95,8 @@ trait AbtestAlg[F[_]] extends DataProvider[F] {
       time: Option[OffsetDateTime]
     ): F[Vector[(Entity[Abtest], Feature)]]
 
+  def tempTask: F[String]
+
   def getAllTestsCachedEpoch(
       time: Option[Long]
     ): F[Vector[(Entity[Abtest], Feature)]] =
@@ -200,6 +202,21 @@ final class DefaultAbtestAlg[F[_]](
     idSelector: EntityId => JsObject)
     extends AbtestAlg[F] {
   import QueryDSL._
+
+  def tempTask: F[String] = {
+    for {
+      features <- getAllFeatures
+      featureLines <- features.traverseFilter { f =>
+        getTestsByFeature(f).map { tests =>
+          val sorted = tests.sortBy(_.data.start)
+          for {
+            start <- sorted.headOption
+            end <- sorted.lastOption
+          } yield s"$f, ${start.data.start}, ${end.data.end.map(_.toString).getOrElse("")}"
+        }
+      }
+    } yield featureLines.mkString("\n")
+  }
 
   def create(
       testSpec: AbtestSpec,
