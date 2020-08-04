@@ -155,7 +155,7 @@ class AbtestService[F[_]: Async](
       respond(api.getAllTestsEndAfter(endAfter))
 
     case GET -> Root / "tests" =>
-      respond(api.getAllTests(None))
+      respond(api.getAllRegularTests(None))
 
     case GET -> Root / "tests" / testId =>
       respond(api.getTest(EntityId(testId)))

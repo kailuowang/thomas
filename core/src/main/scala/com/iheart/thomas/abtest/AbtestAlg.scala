@@ -64,7 +64,7 @@ trait AbtestAlg[F[_]] extends DataProvider[F] {
     * Get all the tests
     * @param time optional time constraint, if set, this will only return tests as of that time.
     */
-  def getAllTests(time: Option[OffsetDateTime]): F[Vector[Entity[Abtest]]]
+  def getAllRegularTests(time: Option[OffsetDateTime]): F[Vector[Entity[Abtest]]]
 
   def getAllTestsBySpecialization(
       specialization: Specialization,
@@ -72,7 +72,7 @@ trait AbtestAlg[F[_]] extends DataProvider[F] {
     ): F[Vector[Entity[Abtest]]]
 
   def getAllTestsEpoch(time: Option[Long]): F[Vector[Entity[Abtest]]] =
-    getAllTests(time.map(TimeUtil.toDateTime))
+    getAllRegularTests(time.map(TimeUtil.toDateTime))
 
   def setOverrideEligibilityIn(
       feature: FeatureName,
@@ -275,9 +275,14 @@ final class DefaultAbtestAlg[F[_]](
   def getTest(id: TestId): F[Entity[Abtest]] =
     abTestDao.get(id)
 
-  def getAllTests(time: Option[OffsetDateTime]): F[Vector[Entity[Abtest]]] =
+  def getAllRegularTests(time: Option[OffsetDateTime]): F[Vector[Entity[Abtest]]] =
     nowF.flatMap { n =>
-      abTestDao.find(abtests.byTime(time.map(_.toInstant).getOrElse(n), None))
+      abTestDao.find(
+        abtests.byTime(time.map(_.toInstant).getOrElse(n), None) ++
+          Json.obj(
+            "specialization" -> Json.obj("$exists:" -> false)
+          )
+      )
     }
 
   def getAllTestsEndAfter(time: OffsetDateTime): F[Vector[Entity[Abtest]]] =

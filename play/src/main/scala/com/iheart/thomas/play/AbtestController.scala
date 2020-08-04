@@ -55,7 +55,7 @@ class AbtestController[F[_]](
         InvalidRequest("Cannot specify both at and endAfter")
       )
     } else
-      endAfter.fold(api.getAllTests(at.map(TimeUtil.toDateTime))) { ea =>
+      endAfter.fold(api.getAllRegularTests(at.map(TimeUtil.toDateTime))) { ea =>
         api.getAllTestsEndAfter(ea)
       }
 
